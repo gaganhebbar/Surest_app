@@ -27,7 +27,7 @@ public class AuthControllerIntegrationTest {
     void testLoginIntegration() throws Exception {
         LoginRequest req = new LoginRequest("admin_user", "AdminPass123");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
@@ -39,7 +39,7 @@ public class AuthControllerIntegrationTest {
     void testLoginInvalidIntegration() throws Exception {
         LoginRequest req = new LoginRequest("bad", "wrong");
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
                 .andExpect(status().isUnauthorized())

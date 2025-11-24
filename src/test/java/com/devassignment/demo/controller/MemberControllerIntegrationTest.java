@@ -64,7 +64,7 @@ class MemberControllerIntegrationTest {
     void memberByIdForUserRole() throws Exception {
         when(memberService.getMemberById(memberId)).thenReturn(member);
 
-        mockMvc.perform(get("/api/members/" + memberId))
+        mockMvc.perform(get("/api/v1/members/" + memberId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("Gagan"))
                 .andExpect(jsonPath("$.email").value("gagan@example.com"));
@@ -76,7 +76,7 @@ class MemberControllerIntegrationTest {
      */
     @Test
     void authorizeCheckWhenNoToken() throws Exception {
-        mockMvc.perform(get("/api/members/" + memberId))
+        mockMvc.perform(get("/api/v1/members/" + memberId))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -95,7 +95,7 @@ class MemberControllerIntegrationTest {
 
         when(memberService.createMember(Mockito.any())).thenReturn(member);
 
-        mockMvc.perform(post("/api/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -116,7 +116,7 @@ class MemberControllerIntegrationTest {
     @Test
     @WithMockUser(roles = {"USER"})
     void createMemberAsUser() throws Exception {
-        mockMvc.perform(post("/api/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -139,7 +139,7 @@ class MemberControllerIntegrationTest {
 
         when(memberService.updateMember(eq(memberId), Mockito.any())).thenReturn(member);
 
-        mockMvc.perform(put("/api/members/" + memberId)
+        mockMvc.perform(put("/api/v1/members/" + memberId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -163,7 +163,7 @@ class MemberControllerIntegrationTest {
 
         when(memberService.updateMember(eq(memberId), Mockito.any())).thenReturn(member);
 
-        mockMvc.perform(put("/api/members/" + memberId)
+        mockMvc.perform(put("/api/v1/members/" + memberId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -183,7 +183,7 @@ class MemberControllerIntegrationTest {
     @Test
     @WithMockUser(roles = {"ADMIN"})
     void deleteMemberAsAdmin() throws Exception {
-        mockMvc.perform(delete("/api/members/" + memberId))
+        mockMvc.perform(delete("/api/v1/members/" + memberId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Member deleted successfully"));
 
@@ -197,7 +197,7 @@ class MemberControllerIntegrationTest {
     @Test
     @WithMockUser(roles = {"USER"})
     void deleteMemberAsUser() throws Exception {
-        mockMvc.perform(delete("/api/members/" + memberId))
+        mockMvc.perform(delete("/api/v1/members/" + memberId))
                 .andExpect(jsonPath("$.error").value("Access Denied"));
     }
 }
