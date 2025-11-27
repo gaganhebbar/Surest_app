@@ -18,6 +18,10 @@ public class User {
     @Column(columnDefinition = "UUID")
     private UUID id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "username", length = 50, nullable = false, unique = true)
     private String userName;
 

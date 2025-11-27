@@ -1,5 +1,8 @@
 package com.devassignment.demo.services;
 
+import com.devassignment.demo.dto.MemberMapper;
+import com.devassignment.demo.dto.MemberResponse;
+import com.devassignment.demo.dto.PagedResponse;
 import com.devassignment.demo.entity.Member;
 import com.devassignment.demo.dto.MemberRequest;
 import com.devassignment.demo.repository.MemberRepository;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,11 +29,11 @@ public class MemberServiceImpl implements MemberService {
     private MemberRepository repository;
 
     @Override
-    public Page<Member> getMembers(String firstName,
-                                   String lastName,
-                                   int page,
-                                   int size,
-                                   String sort) {
+    public PagedResponse<MemberResponse> getMembers(String firstName,
+                                                    String lastName,
+                                                    int page,
+                                                    int size,
+                                                    String sort) {
         String[] sortParts = sort.split(",");
         String sortField = sortParts[0];
         Sort.Direction direction = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc")
@@ -40,20 +44,34 @@ public class MemberServiceImpl implements MemberService {
         Specification<Member> spec = Specification
                 .where(MemberSpecifications.firstNameContains(firstName))
                 .and(MemberSpecifications.lastNameContains(lastName));
+        Page<Member> memberPage = repository.findAll(spec, pageable);
 
-        return repository.findAll(spec, pageable);
+        List<MemberResponse> dtoList = memberPage.getContent()
+                .stream()
+                .map(MemberMapper::toResponse)
+                .toList();
+        return new PagedResponse<>(
+                dtoList,
+                memberPage.getNumber(),
+                memberPage.getSize(),
+                memberPage.getTotalElements(),
+                memberPage.getTotalPages(),
+                memberPage.isFirst(),
+                memberPage.isLast()
+        );
     }
 
     @Override
     @Cacheable(value = "members", key = "#id.toString()")
-    public Member getMemberById(UUID id) {
-        System.out.println("DB HIT for: " + id);
-        return repository.findById(id).orElseThrow(() ->
+    public MemberResponse getMemberById(UUID id) {
+        Member member = repository.findById(id).orElseThrow(() ->
                 new RuntimeException("Member not found"));
+        return MemberMapper.toResponse(member);
     }
 
     @Override
-    public Member createMember(MemberRequest request) {
+    @Transactional
+    public MemberResponse createMember(MemberRequest request) {
         if (repository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -63,16 +81,15 @@ public class MemberServiceImpl implements MemberService {
         member.setLastName(request.getLastName());
         member.setDateOfBirth(request.getDateOfBirth());
         member.setEmail(request.getEmail());
-        member.setCreatedAt(LocalDateTime.now());
-        member.setUpdatedAt(LocalDateTime.now());
 
-        return repository.save(member);
+        Member newMember = repository.save(member);
+        return MemberMapper.toResponse(newMember);
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "members", key = "#id.toString()")
-    public Member updateMember(UUID id, MemberRequest req) {
+    public MemberResponse updateMember(UUID id, MemberRequest req) {
 
         Member existing = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Member not found"));
@@ -83,7 +100,8 @@ public class MemberServiceImpl implements MemberService {
         existing.setEmail(req.getEmail());
         existing.setUpdatedAt(LocalDateTime.now());
 
-        return repository.save(existing);
+        Member UpdatedMember = repository.save(existing);
+        return MemberMapper.toResponse(UpdatedMember);
     }
 
     @Override

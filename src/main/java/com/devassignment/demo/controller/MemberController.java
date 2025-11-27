@@ -1,8 +1,9 @@
 package com.devassignment.demo.controller;
 
+import com.devassignment.demo.dto.MemberResponse;
 import com.devassignment.demo.entity.Member;
 import com.devassignment.demo.dto.MemberRequest;
-import com.devassignment.demo.dto.MembersResponse;
+import com.devassignment.demo.dto.PagedResponse;
 import com.devassignment.demo.services.MemberService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class MemberController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public MembersResponse<Member> getMembers(
+    public PagedResponse<MemberResponse> getMembers(
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(defaultValue = "0") int page,
@@ -32,40 +33,32 @@ public class MemberController {
             @RequestParam(defaultValue = "lastName,asc") String sort
     ) {
         int adjustedPage = page - 1;
-        Page<Member> result = service.getMembers(firstName, lastName, adjustedPage, size, sort);
-        return new MembersResponse<>(
-                result.getContent(),
-                result.getNumber() + 1,
-                result.getSize(),
-                result.getTotalElements(),
-                result.getTotalPages(),
-                result.isFirst(),
-                result.isLast()
-        );
+        return service.getMembers(firstName, lastName, adjustedPage, size, sort);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public Member getMemberById(@PathVariable UUID id) {
-        return service.getMemberById(id);
+    public ResponseEntity<MemberResponse> getMemberById(@PathVariable UUID id) {
+        MemberResponse member = service.getMemberById(id);
+        return ResponseEntity.status(HttpStatus.OK).body(member);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Member> createMember(
+    public ResponseEntity<MemberResponse> createMember(
             @Valid @RequestBody MemberRequest request
     ) {
-        Member member = service.createMember(request);
+        MemberResponse member = service.createMember(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(member);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Member> updateMember(
+    public ResponseEntity<MemberResponse> updateMember(
             @PathVariable UUID id,
             @Valid @RequestBody MemberRequest request
     ) {
-        Member updated = service.updateMember(id, request);
+        MemberResponse updated = service.updateMember(id, request);
         return ResponseEntity.ok(updated);
     }
 

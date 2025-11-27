@@ -22,6 +22,10 @@ public class Member {
     @Column(columnDefinition = "UUID")
     private UUID id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "first_name", length = 100, nullable = false)
     private String firstName;
 

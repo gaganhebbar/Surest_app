@@ -19,6 +19,10 @@ public class Role {
     @Column(columnDefinition = "UUID")
     private UUID id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "name", length = 50, nullable = false)
     private String name;
 }

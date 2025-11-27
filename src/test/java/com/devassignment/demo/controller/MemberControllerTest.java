@@ -1,7 +1,8 @@
 package com.devassignment.demo.controller;
 
 import com.devassignment.demo.dto.MemberRequest;
-import com.devassignment.demo.dto.MembersResponse;
+import com.devassignment.demo.dto.MemberResponse;
+import com.devassignment.demo.dto.PagedResponse;
 import com.devassignment.demo.entity.Member;
 import com.devassignment.demo.services.MemberService;
 
@@ -40,36 +41,51 @@ class MemberControllerTest {
      */
     @Test
     void testPaginatedMembers() {
-        Member m = new Member(
-                UUID.randomUUID(),
-                "gagan",
-                "hebbar",
-                LocalDate.of(1996, 7, 31),
-                "gagan.hebbar@example.com",
-                null, null
+
+        MemberResponse member = MemberResponse.builder()
+                .id(UUID.randomUUID())
+                .firstName("gagan")
+                .lastName("hebbar")
+                .email("gagan.hebbar@example.com")
+                .dateOfBirth(LocalDate.of(1996, 7, 31))
+                .build();
+
+        PagedResponse<MemberResponse> mockResponse = new PagedResponse<>(
+                List.of(member),
+                0,
+                10,
+                1,
+                1,
+                true,
+                true
         );
 
-        List<Member> members = List.of(m);
+        when(memberService.getMembers(any(), any(), anyInt(), anyInt(), any()))
+                .thenReturn(mockResponse);
 
-        Page<Member> mockPage = new PageImpl<>(
-                members,
-                org.springframework.data.domain.PageRequest.of(0, 10),
-                members.size()
-        );
+        // Call controller
+        PagedResponse<MemberResponse> response =
+                memberController.getMembers("gagan", "hebbar", 0, 10, "lastName,asc");
 
-        when(memberService.getMembers(null, null, 0, 10, "lastName,asc"))
-                .thenReturn(mockPage);
-
-        MembersResponse<Member> response =
-                memberController.getMembers(null, null, 1, 10, "lastName,asc");
-
-        // Assert
-        assertEquals(1, response.getPage());
+        // Assertions
+        assertNotNull(response);
+        assertEquals(0, response.getPage());
         assertEquals(10, response.getSize());
         assertEquals(1, response.getTotalElements());
         assertEquals("gagan", response.getData().get(0).getFirstName());
-        verify(memberService).getMembers(null, null, 0, 10, "lastName,asc");
+
+        // Verify actual call
+        verify(memberService).getMembers(
+                eq("gagan"),
+                eq("hebbar"),
+                eq(-1),  // VERY IMPORTANT
+                eq(10),
+                eq("lastName,asc")
+        );
     }
+
+
+
 
     /**
      * GET /api/members/{id}
@@ -77,22 +93,19 @@ class MemberControllerTest {
     @Test
     void testMemberById() {
         UUID id = UUID.randomUUID();
-
-        Member member = new Member(
-                id,
-                "gagan",
-                "hebbar",
-                LocalDate.of(1996, 7, 31),
-                "gagan.hebbar@example.com",
-                null, null
-        );
-
+        MemberResponse member = MemberResponse.builder()
+                .id(id)
+                .firstName("gagan")
+                .lastName("hebbar")
+                .email("gagan.hebbar@example.com")
+                .dateOfBirth(LocalDate.of(1996, 7, 31))
+                .build();
         when(memberService.getMemberById(id)).thenReturn(member);
 
-        Member result = memberController.getMemberById(id);
+        ResponseEntity<MemberResponse> result = memberController.getMemberById(id);
 
         // Assert
-        assertEquals("gagan", result.getFirstName());
+        assertEquals("gagan", result.getBody().getFirstName());
         verify(memberService).getMemberById(id);
     }
 
@@ -107,18 +120,17 @@ class MemberControllerTest {
                 "gagan.hebbar@example.com"
         );
 
-        Member created = new Member(
-                UUID.randomUUID(),
-                "gagan",
-                "hebbar",
-                LocalDate.of(1996, 7, 31),
-                "gagan.hebbar@example.com",
-                null, null
-        );
+        MemberResponse created = MemberResponse.builder()
+                .id(UUID.randomUUID())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .dateOfBirth(request.getDateOfBirth())
+                .build();
 
         when(memberService.createMember(request)).thenReturn(created);
 
-        ResponseEntity<Member> response = memberController.createMember(request);
+        ResponseEntity<MemberResponse> response = memberController.createMember(request);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -140,16 +152,16 @@ class MemberControllerTest {
                 "gagan.hebbar31@example.com"
         );
 
-        Member updated = new Member(
-                id, "gagan", "Hebbar K A",
-                LocalDate.of(1996, 7, 31),
-                "gagan.hebbar31@example.com",
-                null, null
-        );
-
+        MemberResponse updated = MemberResponse.builder()
+                .id(id)
+                .firstName("gagan")
+                .lastName("Hebbar K A")
+                .email("gagan.hebbar31@example.com")
+                .dateOfBirth(LocalDate.of(1996, 7, 31))
+                .build();
         when(memberService.updateMember(id, request)).thenReturn(updated);
 
-        ResponseEntity<Member> response = memberController.updateMember(id, request);
+        ResponseEntity<MemberResponse> response = memberController.updateMember(id, request);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());

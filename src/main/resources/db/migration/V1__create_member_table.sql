@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 ---------------------------------------------------------
 CREATE TABLE member (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
+    version BIGINT NOT NULL DEFAULT 0,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NOT NULL,
@@ -22,6 +22,7 @@ CREATE TABLE member (
 ---------------------------------------------------------
 CREATE TABLE role (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    version BIGINT NOT NULL DEFAULT 0,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -30,7 +31,7 @@ CREATE TABLE role (
 ---------------------------------------------------------
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
+    version BIGINT NOT NULL DEFAULT 0,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
 

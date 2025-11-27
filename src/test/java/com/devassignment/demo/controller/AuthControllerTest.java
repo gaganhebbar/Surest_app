@@ -3,7 +3,6 @@ package com.devassignment.demo.controller;
 import com.devassignment.demo.config.JwtUtil;
 import com.devassignment.demo.dto.LoginRequest;
 import com.devassignment.demo.dto.LoginResponse;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,35 +13,26 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 public class AuthControllerTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private JwtUtil jwtService;
+    private JwtUtil jwtUtil;
 
     @InjectMocks
     private AuthController authController;
 
-    public AuthControllerTest() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @BeforeEach
     void setUp() {
-        authenticationManager = mock(AuthenticationManager.class);
-        jwtService = mock(JwtUtil.class);
-
-        authController = new AuthController(authenticationManager, jwtService);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -54,7 +44,7 @@ public class AuthControllerTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(user, null, List.of());
 
         when(authenticationManager.authenticate(any())).thenReturn(auth);
-        when(jwtService.generateToken(any())).thenReturn("mock-jwt-token");
+        when(jwtUtil.generateToken(any())).thenReturn("mock-jwt-token");
 
         // Act
         ResponseEntity<LoginResponse> response = authController.login(req);
@@ -66,7 +56,7 @@ public class AuthControllerTest {
         assertEquals(200, response.getStatusCode().value());
 
         verify(authenticationManager, times(1)).authenticate(any());
-        verify(jwtService, times(1)).generateToken(any());
+        verify(jwtUtil, times(1)).generateToken(any());
     }
 
     @Test
@@ -82,6 +72,7 @@ public class AuthControllerTest {
 
         verify(authenticationManager, times(1))
                 .authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtService, never()).generateToken(any());
+
+        verify(jwtUtil, never()).generateToken(any());
     }
 }

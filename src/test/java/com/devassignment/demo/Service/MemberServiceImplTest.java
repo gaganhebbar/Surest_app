@@ -1,6 +1,8 @@
 package com.devassignment.demo.Service;
 
 import com.devassignment.demo.dto.MemberRequest;
+import com.devassignment.demo.dto.MemberResponse;
+import com.devassignment.demo.dto.PagedResponse;
 import com.devassignment.demo.entity.Member;
 import com.devassignment.demo.repository.MemberRepository;
 import com.devassignment.demo.services.MemberServiceImpl;
@@ -34,7 +36,8 @@ class MemberServiceImplTest {
     @InjectMocks
     private MemberServiceImpl service;
 
-    private Member member;
+    private Member memberEntity;
+    private MemberResponse memberDto;
     private UUID memberId;
 
     @BeforeEach
@@ -42,15 +45,21 @@ class MemberServiceImplTest {
         MockitoAnnotations.openMocks(this);
 
         memberId = UUID.randomUUID();
-        member = new Member(
-                memberId,
-                "Gagan",
-                "Hebbar",
-                LocalDate.of(1996, 7, 31),
-                "gagan@example.com",
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+
+        memberEntity = new Member();
+        memberEntity.setId(memberId);
+        memberEntity.setFirstName("Gagan");
+        memberEntity.setLastName("Hebbar K A");
+        memberEntity.setEmail("gagan.hebbar31@example.com");
+        memberEntity.setDateOfBirth(LocalDate.of(1996, 7, 31));
+
+        memberDto = MemberResponse.builder()
+                .id(memberId)
+                .firstName("Gagan")
+                .lastName("Hebbar K A")
+                .email("gagan.hebbar31@example.com")
+                .dateOfBirth(LocalDate.of(1996, 7, 31))
+                .build();
     }
 
     // -----------------------------------------------------------
@@ -58,17 +67,17 @@ class MemberServiceImplTest {
     // -----------------------------------------------------------
     @Test
     void getMembersPagedResults() {
-        Page<Member> page = new PageImpl<>(List.of(member));
+        Page<Member> page = new PageImpl<>(List.of(memberEntity));
 
         when(repository.findAll(
                 ArgumentMatchers.<Specification<Member>>any(),
                 any(Pageable.class)
         )).thenReturn(page);
 
-        Page<Member> result = service.getMembers("Gagan", "Hebbar", 0, 10, "firstName,asc");
+        PagedResponse<MemberResponse> result = service.getMembers("Gagan", "Hebbar", 0, 10, "firstName,asc");
 
-        assertEquals(1, result.getContent().size());
-
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Gagan", result.getData().get(0).getFirstName());
         verify(repository).findAll(
                 ArgumentMatchers.<Specification<Member>>any(),
                 any(Pageable.class)
@@ -80,9 +89,9 @@ class MemberServiceImplTest {
      */
     @Test
     void getMemberById() {
-        when(repository.findById(memberId)).thenReturn(Optional.of(member));
+        when(repository.findById(memberId)).thenReturn(Optional.of(memberEntity));
 
-        Member result = service.getMemberById(memberId);
+        MemberResponse result = service.getMemberById(memberId);
 
         assertEquals("Gagan", result.getFirstName());
         verify(repository).findById(memberId);
@@ -112,9 +121,9 @@ class MemberServiceImplTest {
         );
 
         when(repository.existsByEmail(req.getEmail())).thenReturn(false);
-        when(repository.save(any(Member.class))).thenReturn(member);
+        when(repository.save(any(Member.class))).thenReturn(memberEntity);
 
-        Member result = service.createMember(req);
+        MemberResponse result = service.createMember(req);
 
         assertEquals("Gagan", result.getFirstName());
         verify(repository).save(any(Member.class));
@@ -150,13 +159,13 @@ class MemberServiceImplTest {
                 "gagan@example.com"
         );
 
-        when(repository.findById(memberId)).thenReturn(Optional.of(member));
-        when(repository.save(any(Member.class))).thenReturn(member);
+        when(repository.findById(memberId)).thenReturn(Optional.of(memberEntity));
+        when(repository.save(any(Member.class))).thenReturn(memberEntity);
 
-        Member result = service.updateMember(memberId, req);
+        MemberResponse result = service.updateMember(memberId, req);
 
         assertEquals("Updated", result.getLastName());
-        verify(repository).save(member);
+        verify(repository).save(memberEntity);
     }
 
     @Test
