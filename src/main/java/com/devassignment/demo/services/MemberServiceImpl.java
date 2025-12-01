@@ -29,6 +29,7 @@ public class MemberServiceImpl implements MemberService {
     private MemberRepository repository;
 
     @Override
+    @Transactional
     public PagedResponse<MemberResponse> getMembers(String firstName,
                                                     String lastName,
                                                     int page,
@@ -62,6 +63,7 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
+    @Transactional
     @Cacheable(value = "members", key = "#id.toString()")
     public MemberResponse getMemberById(UUID id) {
         Member member = repository.findById(id).orElseThrow(() ->
