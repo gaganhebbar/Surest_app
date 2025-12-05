@@ -39,6 +39,7 @@ management:
       cache:
         display-values: true
 
+
 springdoc:
   api-docs:
     enabled: true
